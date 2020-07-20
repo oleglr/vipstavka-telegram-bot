@@ -23,8 +23,10 @@ class UpdateKeyboard():
         
         start_keyb = keyboards['start_keyboard'] = types.ReplyKeyboardMarkup(one_time_keyboard=False, resize_keyboard=True)
         
-        start_keyb.row("Я оплатил💰")
+        start_keyb.row("Приобрести доступ🔐")
         start_keyb.row("Связь с оператором📲") 
+        start_keyb.row("Я оплатил/продлил💰")
+
 
         return start_keyb
     

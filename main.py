@@ -6,6 +6,10 @@ from multiprocessing.context import Process
 import time
 import requests
 from db_requests import SQLRequests, conn, cursor
+import datetime
+
+today = datetime.datetime.today()
+now = today.strftime("%Y-%m-%d-%H.%M")
 
 
 r = requests.Session()
@@ -24,6 +28,8 @@ users_what_pay_access = {}
 @dp.message_handler(commands = ['start'])
 async def starting (message: types.Message):
     """Функция для вывода информации по команде /start"""
+    global today, now
+
     if message.from_user.id in all_users.keys():
         pass
     else:
@@ -37,8 +43,20 @@ async def starting (message: types.Message):
 
     await message.answer("Что бы вы хотели сделать?", reply_markup = start_keyb )
 
+
+@dp.message_handler(lambda message: message.text == "Приобрести доступ🔐")
+async def why_but_access(message: types.Message):
     
-@dp.message_handler(lambda message: message.text == "Я оплатил💰")
+    await message.answer("Оплату можно произвести по реквизитам ниже:\n\nНомер Карты:\n4890494693625188\n\n"\
+                        "💳 Онлайн оплата с карты:\nhttp://bit.ly/to_card\n\n"\
+                        "📱 Qiwi: +79061007766\n💵 Яндекс Деньги: 410011650372076\n\n"\
+                        "(можно со сберонлайн:  Платежи > Остальное > в поиске ввести яндекс деньги)\n\n"\
+                        "⚠️После оплаты присылай скриншот менеджеру в лс @bet_market\n\n"\
+                        "Нажми кнопку «Я оплатил/продлил💰» ниже. \nПроверю и выдам доступ.")
+
+
+
+@dp.message_handler(lambda message: message.text == "Я оплатил/продлил💰")
 async def buy_access(message: types.Message):
     """Функция срабатывает при нажатии на кнопку Я оплатил💰"""
 
@@ -63,6 +81,13 @@ async def add_days_for_user(c: types.CallbackQuery):
 
     link_button = UpdateKeyboard(keyboards, buttons).create_invite_link(cut_c_data_for_add_days[2], link)
 
+    user_Id = str(cut_c_data_for_add_days[2])
+    name = all_users[int(cut_c_data_for_add_days[2])]["Name"]
+    username = all_users[int(cut_c_data_for_add_days[2])]["Username"]
+    action = "Выдан доступ для: "
+    
+    SQLRequests(conn, cursor).add_action(now, action, user_Id, name, username)
+
     await bot.send_message(int(cut_c_data_for_add_days[2]), f"Ваш платеж успешно подтвержден!\n"\
                                                             f"Доступ в закрытый канал открыт на <b>{cut_c_data_for_add_days[3]} дней</b>\n\n"\
                                                             f"{link}"
@@ -86,7 +111,7 @@ async def decline_days_for_user(c: types.CallbackQuery):
 async def communication_with_the_operator(message: types.Message):
     """Функция срабатывает при нажатии на кнопку Связь с оператором📲"""
 
-    await message.answer("Здесь сообщение для связи с оператором")
+    await message.answer("Все вопросы пишите в лс менеджер @bet_market или WhatsApp +7906107766")
 
 
 

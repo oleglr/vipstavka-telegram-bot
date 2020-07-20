@@ -27,7 +27,12 @@ class SQLRequests:
         request = "INSERT INTO users VALUES(?,?,?,?,?)"
         self.cursor.execute(request, (user_id, name, username, status, date))
         self.conn.commit()
+    
+    def add_action(self, date, action, user_id, name, userlink):
+        """Добавляем действие в БД"""
 
-get_from_db = SQLRequests(conn, cursor)
+        request = "INSERT INTO logs VALUES(?,?,?)"
+        
+        self.cursor.execute(request, (f"[{date}] ", f"{action} ", f"{user_id}|{name}|@{userlink}"))
+        self.conn.commit()
 
-print(get_from_db.get_users())
