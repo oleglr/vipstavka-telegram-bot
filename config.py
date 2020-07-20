@@ -1,0 +1,3 @@
+API_TOKEN = "1380986571:AAFyAOq2OcIzicbUGl5DFutSs67MLmdfEfo"
+admins = [366954921]
+chat_id = -1001151239301
