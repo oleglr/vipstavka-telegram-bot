@@ -13,11 +13,13 @@ buttons = {
 class UpdateKeyboard():
 
     def __init__(self, keyboards, buttons):
+        """Инициализация словарей для клавиатур и кнопок"""
         
         self.keyboards = keyboards
         self.buttons = buttons
     
     def start_keyboard(self):
+        """Создаем стартовую клавиатуру"""
         
         start_keyb = keyboards['start_keyboard'] = types.ReplyKeyboardMarkup(one_time_keyboard=False, resize_keyboard=True)
         
@@ -27,6 +29,7 @@ class UpdateKeyboard():
         return start_keyb
     
     def admin_general_keyboard(self):
+        """Создаем админ клавиатуру"""
 
         admin_keyb = keyboards['admin_keyboard'] = types.InlineKeyboardMarkup()
         
@@ -38,6 +41,8 @@ class UpdateKeyboard():
     
 
     def add_days_button_for_user(self, user):
+        """Создаем админ клавиатуру для добавления дней пользователю"""
+
         self.user = user
 
         add_days_keyboard = keyboards[f'add_days_{self.user}'] = types.InlineKeyboardMarkup(row_width=5)
@@ -63,6 +68,8 @@ class UpdateKeyboard():
 
     
     def create_invite_link(self, user, link):
+        """Создаем кнопку с ссылкой на закрытый канал"""
+
         self.user = user
         self.link = link
 
