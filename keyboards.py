@@ -41,6 +41,45 @@ class UpdateKeyboard():
 
         return admin_keyb
     
+    def add_admin_buttons(self, action):
+        """Создаем кнопки для админа, по типу "Подтвердить рассылку/Отмнить/Сортировать по""""
+        self.action = action
+        
+        if self.action == "Malling":
+            """Кнопки для подтверждения или отмены рассылки"""
+
+            admin_buttons_for_access_malling = keyboards['admin_buttons_for_access_malling'] = types.InlineKeyboardMarkup()
+
+            admin_buttons_for_access_malling.add(types.InlineKeyboardButton(text="Подтвердить", callback_data="access_malling"))
+            admin_buttons_for_access_malling.add(types.InlineKeyboardButton(text="Отменить", callback_data="decline_malling"))
+
+            return admin_buttons_for_access_malling
+        
+        elif self.action == "History":
+            """Кнопки для сортировки истории действий"""
+
+            admin_buttons_for_sort_history = keyboards['admin_buttons_for_sort_history'] = types.InlineKeyboardMarkup()
+            
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 1 день", callback_data="view_history_1")
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 7 дней", callback_data="view_history_7")
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 30 дней", callback_data="view_history_30")
+
+            return admin_buttons_for_sort_history
+        
+        elif self.action == "Add_All_1_Day":
+            """Кнопки подтверждения или отмены добавления всем активным 1 день подписки"""
+
+            admin_button_for_add_all_one_day = keyboards["admin_button_for_add_all_one_day"] = types.InlineKeyboardMarkup()
+
+            admin_button_for_add_all_one_day.add(types.InlineKeyboardButton(text="Подтвердить", callback_data="access_add_all_one_day"))
+            admin_button_for_add_all_one_day.add(types.InlineKeyboardButton(text="Отменить", callback_data="decline_add_all_one_day"))
+
+            return admin_button_for_add_all_one_day
+
+
+
+
+
 
     def add_days_button_for_user(self, user):
         """Создаем админ клавиатуру для добавления дней пользователю"""

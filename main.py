@@ -13,6 +13,10 @@ now = today.strftime("%Y-%m-%d-%H.%M")
 
 
 r = requests.Session()
+logs = {}
+
+MALLING_STATUS = False
+
 
 #Назначаем переменным клавиатуры
 start_keyb = UpdateKeyboard(keyboards, buttons).start_keyboard()
@@ -94,6 +98,73 @@ async def add_days_for_user(c: types.CallbackQuery):
                                                             ,parse_mode='html', reply_markup=link_button)
 
 
+@dp.callback_query_handler(lambda c: c.data in ["new_malling",
+                                                "action_history",
+                                                "add_all_1_day"])
+
+async def react_admin_general_button(message:types.Message):
+    """Работаем с главной админ клавиатурой"""
+    global MALLING_STATUS
+
+    if c.from_user.id in admins:
+
+        """Создание рассылки"""
+
+        if c.data == "new_malling"
+            MALLING_STATUS = True
+            admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("Malling")
+            await message.answer("Перехожу в режим ожидания сообщения для рассылки\n\n"
+                                "Примечание: <b>Сообщение не может содержать более 1024 символов!</b>"
+                                parse_mode='html')
+        
+        elif c.data == "new_malling" and MALLING_STATUS == True:
+            await message.answer("Я уже ожидаю сообщение для рассылки...")
+    
+
+        """Сортировка истории действий"""
+        if c.data == "action_history":
+            admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("History")
+
+            await message.answer("За какой период смотрим историю?", reply_markup=admin_buttons)
+        
+
+        """Добавлением всем активным +1 день к доступу в канал"""
+        if c.data == "add_all_1_day":
+            admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("Add_All_1_Day")
+
+            await message.answer("Подтвердить добавление всем активным пользователям +1 день доступ в канал?", reply_markup=admin_buttons)
+
+
+
+    
+
+@dp.callback_query_handler(lambda c: c.data in ["access_malling", 
+                                                "decline_malling",
+                                                "view_history_1", 
+                                                "view_history_7", 
+                                                "view_history_30",
+                                                "access_add_all_one_day",
+                                                "decline_add_all_one_day"])
+
+async def admin_access_and_sort_buttons(c: types.CallbackQuery):
+    """Работа с кнопками для сортировки или подтверждения/отменения админ действий"""
+
+
+    """Подтвердить/отменить рассылку"""
+    if c.data == "access_malling":
+        await message.answer("Рассылка успешно запущена!")
+    elif c.data == "decline_malling":
+        MALLING_STATUS = False
+        await message.answer("Рассылка отменена")
+
+
+
+@dp.message_handler(content_types = ['text'])
+async def get_text_for_malling(message: types.Message)
+
+
+
+
 
 @dp.callback_query_handler(lambda c: c.data.startswith("decline_"))
 async def decline_days_for_user(c: types.CallbackQuery):
@@ -123,7 +194,7 @@ async def admin_menu(message: types.Message):
         await message.answer("Вход в админ панель разрешен!\nЧто вы хотите сделать?", reply_markup=general_admin_keyb)
 
 
-def get_all_users_in_start():
+def get_all_users_and_logs_in_start():
     """Форматируем инфу о пользователях в словарь"""
 
     users = SQLRequests(conn, cursor).get_users()
@@ -135,9 +206,20 @@ def get_all_users_in_start():
                                   "Status":info[3],
                                   "Date":info[4]}
 
+    logs_from_db = SQLRequests(conn.cursor).load_actions_from_database()
+    if logs_from_db:
+        for log in logs_from_db:
+            logs[log[0]] = {"Date":log[0],
+                            "Action":log[1],
+                            "Info":log[2]
+            }
+    else:
+        logs = False
+
 
 if __name__ == "__main__":
-    get_all_users_in_start()
+    get_all_users_and_logs_in_start()
+
     try:
         executor.start_polling(dp, skip_updates=True)
     except Exception as e:
