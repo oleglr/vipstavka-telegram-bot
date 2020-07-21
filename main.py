@@ -1,4 +1,4 @@
-from aiogram import Bot, Dispatcher, executor, types
+from aiogram import Bot, Dispatcher, executor, types, exceptions
 from keyboards import UpdateKeyboard, keyboards, buttons
 from config import API_TOKEN, admins, chat_id
 import schedule
@@ -17,6 +17,7 @@ logs = {}
 
 MALLING_STATUS = False
 
+text_for_malling = ""
 
 #Назначаем переменным клавиатуры
 start_keyb = UpdateKeyboard(keyboards, buttons).start_keyboard()
@@ -128,7 +129,7 @@ async def react_admin_general_button(message:types.Message):
             await message.answer("За какой период смотрим историю?", reply_markup=admin_buttons)
         
 
-        """Добавлением всем активным +1 день к доступу в канал"""
+        """Добавлянием всем активным +1 день к доступу в канал"""
         if c.data == "add_all_1_day":
             admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("Add_All_1_Day")
 
@@ -142,7 +143,7 @@ async def react_admin_general_button(message:types.Message):
                                                 "decline_malling",
                                                 "view_history_1", 
                                                 "view_history_7", 
-                                                "view_history_30",
+                                                "view_history_all",
                                                 "access_add_all_one_day",
                                                 "decline_add_all_one_day"])
 
@@ -151,16 +152,49 @@ async def admin_access_and_sort_buttons(c: types.CallbackQuery):
 
 
     """Подтвердить/отменить рассылку"""
-    if c.data == "access_malling":
+    if c.data == "access_malling" and text_for_malling != "":
         await message.answer("Рассылка успешно запущена!")
+
+        for key in all_users.keys():
+            try:
+                await bot.send_message(key, text_for_malling)
+            except exceptions.BotBlocked:
+                pass
+    
+    elif c.data == "access_malling" and text_for_malling == "":
+        await message.answer("Вы не отправили мне сообщение для рассылки")
+
+
     elif c.data == "decline_malling":
         MALLING_STATUS = False
+        text_for_malling = ""
         await message.answer("Рассылка отменена")
+    
+    elif c.data == "view_history_1":
+        get_all_users_and_logs_in_start()
+
+        for values in logs.values():
+
+
 
 
 
 @dp.message_handler(content_types = ['text'])
-async def get_text_for_malling(message: types.Message)
+async def get_text_for_malling(message: types.Message):
+    """Показываем сообщение для рассылки и кнопки для подтверждения/отмены рассылки"""
+    global text_for_malling
+    try:
+        admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("Malling")
+
+        if message.from_user.id in admins and MALLING_STATUS == True:
+            text_for_malling = message.text
+            await message.answer(message.text, reply_markup=admin_buttons)
+
+        else:
+            pass
+    
+    except exceptions.MessageIsTooLong:
+        await message.answer("Слишком большое сообщение для рассылки...")
 
 
 
@@ -209,9 +243,9 @@ def get_all_users_and_logs_in_start():
     logs_from_db = SQLRequests(conn.cursor).load_actions_from_database()
     if logs_from_db:
         for log in logs_from_db:
-            logs[log[0]] = {"Date":log[0],
-                            "Action":log[1],
-                            "Info":log[2]
+            logs[log[0]] = {"Date":log[1],
+                            "Action":log[2],
+                            "Info":log[3]
             }
     else:
         logs = False

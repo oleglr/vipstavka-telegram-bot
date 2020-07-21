@@ -2,7 +2,6 @@ import sqlite3
 import datetime
 
 today = datetime.datetime.today()
-now = today.strftime("%Y-%m-%d-%H-%M-%S")
 
 logs = {}
 conn = sqlite3.connect( "./data/data.db", check_same_thread=False )
@@ -59,19 +58,12 @@ class SQLRequests:
 
 a = SQLRequests(conn, cursor)
 
+res = a.add_action(today, "Удален из канала", 0000000, "Имя", "user")
 
-result = a.load_actions_from_database()
+res = a.load_actions_from_database()
 
+res = datetime(res[0][1])
 
-
-for log in result:
-    logs[log[0]] = {"Date":log[1],
-                    "Action":log[2],
-                    "Info":log[3]}
-    
-print(logs)
-
-with open("./logs.txt", 'a', encoding='UTF-8') as write_logs:
-    for key, val in logs.items():
-        write_logs.write(f"{key}: {val}\n")
+print(res)
+print(type(res))
 

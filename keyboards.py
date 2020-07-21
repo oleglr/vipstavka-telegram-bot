@@ -62,7 +62,7 @@ class UpdateKeyboard():
             
             admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 1 день", callback_data="view_history_1")
             admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 7 дней", callback_data="view_history_7")
-            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 30 дней", callback_data="view_history_30")
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за все время", callback_data="view_history_all")
 
             return admin_buttons_for_sort_history
         
