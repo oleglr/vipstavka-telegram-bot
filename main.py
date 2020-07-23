@@ -7,6 +7,14 @@ import time
 import requests
 from db_requests import SQLRequests, conn, cursor
 import datetime
+from datetime import date, timedelta
+from crontab import CronTab
+cron = CronTab()
+
+job = cron.new(command='cron_action.py', user=True)
+
+
+
 
 today = datetime.datetime.today()
 now = today.strftime("%Y-%m-%d-%H.%M")
@@ -29,6 +37,17 @@ bot = Bot(API_TOKEN)
 dp = Dispatcher(bot)
 
 users_what_pay_access = {}
+
+@dp.message_handler(commands = ['admin'])
+async def admin_menu(message: types.Message):
+    """Функция срабатывает по команде /admin"""
+
+    if message.from_user.id in admins:
+        await message.answer("Вход в админ панель разрешен!\nЧто вы хотите сделать?", reply_markup=general_admin_keyb)
+    
+    else:
+        print(False)
+
 
 @dp.message_handler(commands = ['start'])
 async def starting (message: types.Message):
@@ -77,6 +96,15 @@ async def buy_access(message: types.Message):
     await message.answer("Проверяю оплату! Ожидайте...")
     await bot.send_message(366954921, format_message, reply_markup=to_admin_keyb)
 
+
+@dp.message_handler(lambda message: message.text == "Связь с оператором📲")
+async def connect_with_operator(message:types.Message):
+    """Функция срабатывает по нажатию на кнопку Связь с оператором📲"""
+    await message.answer("Test")
+
+    
+
+
 @dp.callback_query_handler(lambda c: c.data.startswith("add_days_"))
 async def add_days_for_user(c: types.CallbackQuery):
     """Функция для добавления дней пользователю с админ клавиатуры"""
@@ -91,7 +119,15 @@ async def add_days_for_user(c: types.CallbackQuery):
     username = all_users[int(cut_c_data_for_add_days[2])]["Username"]
     action = "Выдан доступ для: "
     
-    SQLRequests(conn, cursor).add_action(now, action, user_Id, name, username)
+    SQLRequests(conn, cursor).add_action(date.today(), action, user_Id, name, username)
+    SQLRequests(conn, cursor).change_status(date.today(), user_Id, "In_Channel")
+
+
+
+    try:
+        await bot.unban_chat_member(chat_id, int(cut_c_data_for_add_days[2]))
+    except exceptions.BadRequest:
+        pass
 
     await bot.send_message(int(cut_c_data_for_add_days[2]), f"Ваш платеж успешно подтвержден!\n"\
                                                             f"Доступ в закрытый канал открыт на <b>{cut_c_data_for_add_days[3]} дней</b>\n\n"\
@@ -103,7 +139,7 @@ async def add_days_for_user(c: types.CallbackQuery):
                                                 "action_history",
                                                 "add_all_1_day"])
 
-async def react_admin_general_button(message:types.Message):
+async def react_admin_general_button(c:types.CallbackQuery):
     """Работаем с главной админ клавиатурой"""
     global MALLING_STATUS
 
@@ -111,29 +147,29 @@ async def react_admin_general_button(message:types.Message):
 
         """Создание рассылки"""
 
-        if c.data == "new_malling"
+        if c.data == "new_malling":
             MALLING_STATUS = True
             admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("Malling")
-            await message.answer("Перехожу в режим ожидания сообщения для рассылки\n\n"
-                                "Примечание: <b>Сообщение не может содержать более 1024 символов!</b>"
+            await bot.send_message(c.from_user.id, "Перехожу в режим ожидания сообщения для рассылки\n\n"
+                                "Примечание: <b>Сообщение не может содержать более 1024 символов!</b>",
                                 parse_mode='html')
         
         elif c.data == "new_malling" and MALLING_STATUS == True:
-            await message.answer("Я уже ожидаю сообщение для рассылки...")
+            await bot.send_message(c.from_user.id, "Я уже ожидаю сообщение для рассылки...")
     
 
         """Сортировка истории действий"""
         if c.data == "action_history":
             admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("History")
 
-            await message.answer("За какой период смотрим историю?", reply_markup=admin_buttons)
+            await bot.send_message(c.from_user.id, "За какой период смотрим историю?", reply_markup=admin_buttons)
         
 
         """Добавлянием всем активным +1 день к доступу в канал"""
         if c.data == "add_all_1_day":
             admin_buttons = UpdateKeyboard(keyboards, buttons).add_admin_buttons("Add_All_1_Day")
 
-            await message.answer("Подтвердить добавление всем активным пользователям +1 день доступ в канал?", reply_markup=admin_buttons)
+            await bot.send_message(c.from_user.id, "Подтвердить добавление всем активным пользователям +1 день доступ в канал?", reply_markup=admin_buttons)
 
 
 
@@ -143,17 +179,18 @@ async def react_admin_general_button(message:types.Message):
                                                 "decline_malling",
                                                 "view_history_1", 
                                                 "view_history_7", 
-                                                "view_history_all",
+                                                "view_history_30",
                                                 "access_add_all_one_day",
                                                 "decline_add_all_one_day"])
 
 async def admin_access_and_sort_buttons(c: types.CallbackQuery):
+    global text_for_malling
     """Работа с кнопками для сортировки или подтверждения/отменения админ действий"""
 
 
     """Подтвердить/отменить рассылку"""
     if c.data == "access_malling" and text_for_malling != "":
-        await message.answer("Рассылка успешно запущена!")
+        await bot.send_message(c.from_user.id, "Рассылка успешно запущена!")
 
         for key in all_users.keys():
             try:
@@ -162,18 +199,72 @@ async def admin_access_and_sort_buttons(c: types.CallbackQuery):
                 pass
     
     elif c.data == "access_malling" and text_for_malling == "":
-        await message.answer("Вы не отправили мне сообщение для рассылки")
+        await bot.send_message(c.from_user.id, "Вы не отправили мне сообщение для рассылки")
 
 
     elif c.data == "decline_malling":
         MALLING_STATUS = False
         text_for_malling = ""
-        await message.answer("Рассылка отменена")
+        await bot.send_message(c.from_user.id, "Рассылка отменена")
     
     elif c.data == "view_history_1":
+        with open("./logs.txt", 'w', encoding='UTF-8') as clear_logs:
+            clear_logs.write('')
+
+        now_list = []
         get_all_users_and_logs_in_start()
 
-        for values in logs.values():
+        for item in logs.values():
+            if item['Date'] == str(date.today()):
+                now_list.append(f"{item['Date']} {item['Action']} {item['Info']}")
+
+        if not now_list:
+            await bot.send_message(c.from_user.id, "За сегодня нету действий")
+        
+        else:
+            text = '\n\n'.join(now_list)
+            await bot.send_message(c.from_user.id, text)
+
+
+    elif c.data == "view_history_7":
+        get_all_users_and_logs_in_start()
+
+        seven_days_list = []
+        for item in logs.values():
+            cut_date = item['Date'].split('-')
+            date_for_sort = date(int(cut_date[0]), int(cut_date[1]), int(cut_date[2]))
+            if date_for_sort <= date.today() and date_for_sort > date.today() - timedelta(7):
+                seven_days_list.append(f"{item['Date']} {item['Action']} {item['Info']}")
+            
+        if not seven_days_list:
+            await bot.send_message(c.from_user.id, "Не было действий за последние 7 дней.")
+        else:
+            result = sorted(seven_days_list)
+            text = "\n\n".join(result)
+            await bot.send_message(c.from_user.id, text)
+    
+    elif c.data == "view_history_30":
+        get_all_users_and_logs_in_start()
+
+        thirty_days_list = []
+        for item in logs.values():
+            cut_date = item['Date'].split('-')
+            date_for_sort = date(int(cut_date[0]), int(cut_date[1]), int(cut_date[2]))
+            if date_for_sort <= date.today() and date_for_sort >= date.today() - timedelta(30):
+                thirty_days_list.append(f"{item['Date']} {item['Action']} {item['Info']}")
+            
+        if not thirty_days_list:
+            await bot.send_message(c.from_user.id, "Не было действий за последние 30 дней.")
+        else:
+            result = sorted(thirty_days_list)
+            text = "\n\n".join(result)
+            await bot.send_message(c.from_user.id, text)
+
+            
+
+
+
+        
 
 
 
@@ -220,16 +311,12 @@ async def communication_with_the_operator(message: types.Message):
 
 
 
-@dp.message_handler(commands = ['admin'])
-async def admin_menu(message: types.Message):
-    """Функция срабатывает по команде /admin"""
 
-    if message.from_user.id in admins:
-        await message.answer("Вход в админ панель разрешен!\nЧто вы хотите сделать?", reply_markup=general_admin_keyb)
 
 
 def get_all_users_and_logs_in_start():
     """Форматируем инфу о пользователях в словарь"""
+    global logs
 
     users = SQLRequests(conn, cursor).get_users()
 
@@ -240,13 +327,15 @@ def get_all_users_and_logs_in_start():
                                   "Status":info[3],
                                   "Date":info[4]}
 
-    logs_from_db = SQLRequests(conn.cursor).load_actions_from_database()
+    logs_from_db = SQLRequests(conn, cursor).load_actions_from_database()
     if logs_from_db:
         for log in logs_from_db:
             logs[log[0]] = {"Date":log[1],
                             "Action":log[2],
                             "Info":log[3]
             }
+        
+
     else:
         logs = False
 

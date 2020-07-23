@@ -42,7 +42,7 @@ class UpdateKeyboard():
         return admin_keyb
     
     def add_admin_buttons(self, action):
-        """Создаем кнопки для админа, по типу "Подтвердить рассылку/Отмнить/Сортировать по""""
+        """Создаем кнопки для админа, по типу "Подтвердить рассылку/Отмнить/Сортировать по"""
         self.action = action
         
         if self.action == "Malling":
@@ -60,9 +60,9 @@ class UpdateKeyboard():
 
             admin_buttons_for_sort_history = keyboards['admin_buttons_for_sort_history'] = types.InlineKeyboardMarkup()
             
-            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 1 день", callback_data="view_history_1")
-            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 7 дней", callback_data="view_history_7")
-            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за все время", callback_data="view_history_all")
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 1 день", callback_data="view_history_1"))
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 7 дней", callback_data="view_history_7"))
+            admin_buttons_for_sort_history.add(types.InlineKeyboardButton(text="Показать за 30 дней", callback_data="view_history_30"))
 
             return admin_buttons_for_sort_history
         

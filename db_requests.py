@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import date
 import datetime
 
 today = datetime.datetime.today()
@@ -53,17 +54,28 @@ class SQLRequests:
         
         else:
             return False
+    
+    def change_status(self, date, chat_id, status):
+
+        request = f"UPDATE users SET Status = ?, Date = ? WHERE ID = ?"
+        
+        self.cursor.execute(request, (status, date, chat_id))
+        self.conn.commit()
+
+
+    def select_for_kick(self):
+        
+        request = f"SELECT * FROM users WHERE Date = ?"
+        
+        now = str(date.today())
+
+        self.cursor.execute(request, ([now]))
+        
+        res = self.cursor.fetchall()
+        
+        return res
 
 
 
-a = SQLRequests(conn, cursor)
 
-res = a.add_action(today, "Удален из канала", 0000000, "Имя", "user")
-
-res = a.load_actions_from_database()
-
-res = datetime(res[0][1])
-
-print(res)
-print(type(res))
 
