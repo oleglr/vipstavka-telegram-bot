@@ -64,16 +64,29 @@ class SQLRequests:
 
 
     def select_for_kick(self):
-        
-        request = f"SELECT * FROM users WHERE Date = ?"
+        """Собираем пользователей для удаления"""
         
         now = str(date.today())
 
-        self.cursor.execute(request, ([now]))
+
+        self.cursor.execute(f"SELECT * FROM users WHERE Date = (?) AND Status = ?", [now, "In_Channel"])
         
         res = self.cursor.fetchall()
-        
+
         return res
+    
+    def select_for_notate(self, date_1, date_2):
+        """Собираем пользователей для оповещения"""
+
+        self.cursor.execute(f"SELECT * FROM users WHERE Date = (?) OR DATE = (?) AND Status = ?", [date_1,date_2, "In_Channel"])
+
+        res = self.cursor.fetchall()
+
+        return res
+
+
+
+
 
 
 

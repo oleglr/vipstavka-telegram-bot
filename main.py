@@ -329,6 +329,7 @@ def get_all_users_and_logs_in_start():
 
     logs_from_db = SQLRequests(conn, cursor).load_actions_from_database()
     if logs_from_db:
+        logs = {}
         for log in logs_from_db:
             logs[log[0]] = {"Date":log[1],
                             "Action":log[2],
