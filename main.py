@@ -62,7 +62,7 @@ async def starting (message: types.Message):
                                                 message.from_user.username, 
                                                 'Pass', 
                                                 'Pass')
-        get_all_users_in_start()
+        get_all_users_and_logs_in_start()
 
 
     await message.answer("Что бы вы хотели сделать?", reply_markup = start_keyb )
@@ -79,6 +79,29 @@ async def why_but_access(message: types.Message):
                         "Нажми кнопку «Я оплатил/продлил💰» ниже. \nПроверю и выдам доступ.")
 
 
+@dp.message_handler(lambda message: message.text == "Сколько у меня осталось дней❓")
+async def my_days(message: types.Message):
+    get_all_users_and_logs_in_start()
+
+    if all_users[message.from_user.id]['Status'] == "Pass" or all_users[message.from_user.id]['Status'] == "NULL":
+        await message.answer("У вас нету активной подписки")
+    
+    else:
+        user_date = all_users[message.from_user.id]['Date'].split('-')
+
+        text = date.today() - date(int(user_date[0]), int(user_date[1]), int(user_date[2]))
+        result = str(text)
+
+        try:
+            result = result.replace('-','')
+        except Exception:
+            pass
+        
+        await message.answer(f"У вас осталось {result[0:2]} дней")
+
+
+    
+
 
 @dp.message_handler(lambda message: message.text == "Я оплатил/продлил💰")
 async def buy_access(message: types.Message):
@@ -94,15 +117,15 @@ async def buy_access(message: types.Message):
 
 
     await message.answer("Проверяю оплату! Ожидайте...")
-    await bot.send_message(366954921, format_message, reply_markup=to_admin_keyb)
 
+    for admin in admins:
+        await bot.send_message(admin, format_message, reply_markup=to_admin_keyb)
 
 @dp.message_handler(lambda message: message.text == "Связь с оператором📲")
-async def connect_with_operator(message:types.Message):
-    """Функция срабатывает по нажатию на кнопку Связь с оператором📲"""
-    await message.answer("Test")
+async def communication_with_the_operator(message: types.Message):
+    """Функция срабатывает при нажатии на кнопку Связь с оператором📲"""
 
-    
+    await message.answer("Все вопросы пишите в лс менеджер @bet_market или WhatsApp +79061007766")
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith("add_days_"))
@@ -120,7 +143,7 @@ async def add_days_for_user(c: types.CallbackQuery):
     action = "Выдан доступ для: "
     
     SQLRequests(conn, cursor).add_action(date.today(), action, user_Id, name, username)
-    SQLRequests(conn, cursor).change_status(date.today(), user_Id, "In_Channel")
+    SQLRequests(conn, cursor).change_status(date.today()+timedelta(int(cut_c_data_for_add_days[3])), user_Id, "In_Channel")
 
 
 
@@ -129,9 +152,11 @@ async def add_days_for_user(c: types.CallbackQuery):
     except exceptions.BadRequest:
         pass
 
+    for admin in admins:
+        await bot.send_message(admin, f"Добавлены {cut_c_data_for_add_days[3]} дней для {name}|@{username}")
     await bot.send_message(int(cut_c_data_for_add_days[2]), f"Ваш платеж успешно подтвержден!\n"\
-                                                            f"Доступ в закрытый канал открыт на <b>{cut_c_data_for_add_days[3]} дней</b>\n\n"\
-                                                            f"{link}"
+                                                            f"Доступ в закрытый канал открыт на <b>{cut_c_data_for_add_days[3]} дней</b>\n\n"
+                
                                                             ,parse_mode='html', reply_markup=link_button)
 
 
@@ -259,6 +284,14 @@ async def admin_access_and_sort_buttons(c: types.CallbackQuery):
             result = sorted(thirty_days_list)
             text = "\n\n".join(result)
             await bot.send_message(c.from_user.id, text)
+    
+    elif c.data == "access_add_all_one_day":
+        add = SQLRequests(conn, cursor).add_all_one_day()
+
+        if add:
+            await bot.send_message(c.from_user.id, "Добавил дни всем активным")
+        else:
+            await bot.send_message(c.from_user.id, "Нету активных пользователей")
 
             
 
@@ -303,11 +336,6 @@ async def decline_days_for_user(c: types.CallbackQuery):
     
 
 
-@dp.message_handler(lambda message: message.text == "Связь с оператором📲")
-async def communication_with_the_operator(message: types.Message):
-    """Функция срабатывает при нажатии на кнопку Связь с оператором📲"""
-
-    await message.answer("Все вопросы пишите в лс менеджер @bet_market или WhatsApp +7906107766")
 
 
 

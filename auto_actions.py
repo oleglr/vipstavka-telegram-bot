@@ -30,12 +30,14 @@ class WorkWithUsers:
                                                         'text':"Ваша подписка истекла.\nВы исключены из канала!\n"
                                                         "Можете приобрести ее тем же способом."})
                 #Уведомляем админа
-                    r.post(url+"sendMessage", params = {'chat_id': admins[0], 
-                                                        'text':f'Пользователь {item[0]} удален из канала.\n'
-                                                        f'{item[1]}\n'
-                                                        f'@{item[2]}'
-                                                        }
-                                                        )
+                    for admin in admins:
+                        r.post(url+"sendMessage", params = {'chat_id': admin, 
+                                                            'text':f'Пользователь {item[0]} удален из канала.\n'
+                                                            f'{item[1]}\n'
+                                                            f'@{item[2]}'
+                                                            }
+                                                            )
+                    connect_to_db.add_action(str(date.today()), "Удален из канала", item[0], item[1], item[2])
                     connect_to_db.change_status(str(date.today()), item[0], "NULL")
 
             except Exception:
@@ -62,13 +64,14 @@ class WorkWithUsers:
                         r.post(url+"sendMessage", params = {'chat_id': item[0], 
                                                             'text': "У вас остался 1 день до окончания подписки.\n"
                                                             "Продлите ее таким же способом как и приобрели.\nСвязь с менеджером @bet_market или ватсап +7906107766"})
+                        for admin in admins:
 
-                        r.post(url+"sendMessage", params = {'chat_id': admins[0], 
-                                                        'text':f'Пользователь {item[0]} 1 день до окончания подписки.\n'
-                                                        f'{item[1]}\n'
-                                                        f'@{item[2]}'
-                                                        }
-                                                        )
+                            r.post(url+"sendMessage", params = {'chat_id': admin, 
+                                                            'text':f'Пользователь {item[0]} 1 день до окончания подписки.\n'
+                                                            f'{item[1]}\n'
+                                                            f'@{item[2]}'
+                                                            }
+                                                            )
             except Exception:
                 pass
 
